@@ -431,5 +431,16 @@ mapper["Get off my lawn!"]
 ```
 
 ```
+#/etc/data/user.csv
+id | name | lastname
+---|------|----------
+1  |John  | Doe
+2  |Laurent| Garnier
+
+#/etc/config/settings/twitter.yml
+development:
+  api_key: 'api_key'
+production:
+  api_key: <%= ENV['API_KEY'] %>
 ```
 

@@ -95,6 +95,91 @@ end
 
 
 
+
+
+
+
+
+
+
+
+class KeepingMash < ::Hashie::Mash
+  include Hashie::Extensions::Mash::KeepOriginalKeys
+end
+mash = KeepingMash.new(:symbol_key => :symbol, 'string_key' => 'string')
+mash.to_hash == { :symbol_key => :symbol, 'string_key' => 'string' }
+mash.symbol_key
+mash.[:symbol_key]
+mash['symbol_key']
+mash.string_key
+mash['string_key']
+mash[:string_key]
+
+class SafeMash < ::Hashie::Mash
+  include Hashie::Extensions::Mash::SafeAssignment
+end
+safe_mash = SafeMash.new
+safe_mash.zip = 'Test'
+safe_mash[:zip] = 'test'
+
+class SymbolizedMash < ::Hashie::Mash
+  include Hashie::Extensions::Mash::SymbolizeKeys
+end
+symbol_mash = SymbolizedMash.new
+symbol_mash['test'] = 'value'
+symbol_mash.test
+symbol_mash.to_h
+
+
+symbol_mash = SymbolizedMash.new(id: 123, name: 'Rey')
+symbol_mash.each do |key, value|
+end
+
+class Person < Hashie::Dash
+  property :name, required: true
+  property :age, required: true, message: 'must be set.'
+  property :email
+  property :phone, required -> { email.nil? }, message: 'is ....'
+  property :pants, required: :weekday?, message: 'are...'
+  property :occupation, default: 'Rubyist'
+  def weekday?
+    [ Time.now.saturday?, Time.now.sunday? ].none?
+  end
+end
+p = Person.new
+p = Person.new(name: 'Bob')
+p = Person.new(name: "Bob", age: 18)
+p .name
+p.name = nil
+p.age
+p.age = nil
+p.age = nil
+p.email = 'abc@def.com'
+p.occupation
+p.email
+p[:awesome]
+p[:occupation]
+p.update_attributes!(name: 'Trudy', occupation: 'Evil')
+p.ocupation
+p.name
+p.update_attributes!(occupation: nil)
+p.occupation
+
+class Tricky < Hashie::Dash
+  property :trick
+  property 'trick'
+end
+p = Tricky.new(trick: 'one', 'trick' => 'two' )
+p.trick
+p[:trick]
+p['trick']
+
+class Tricky < Hashie::Dash
+  property 'trick'
+end
+p = Tricky.new('trick' => 'two')
+p.trick
+
 class Foo < Hahie::Dash
   property :bar
 end

@@ -80,28 +80,196 @@ class ProductHash < Hash
   coerce_key :categories, Array[CategoriesHash]
 end
 
+class CategoryHash < Hash
+  coerce_key :products, ->(value) do
+    return value.map { |v| ProductHash.new(v) } if value.respond_to?(:map)
+    ProductHash.new(value)
+  end
+end
 
+Hashie.symbolize_keys! hash
+Hashie.symbolize_keys hash
+Hashie.stringify_keys! hash
+Hashie.stringify_keys hash
 
+class MyHash < Hash
+  include Hashie::Extensions::MethodAccess
+end
+h = MyHash.new
+h.abc = 'def'
+h.abc
+h.abc?
 
+class MyHash < Hash
+  include Hashie::Extensions::MethodAccess
+end
+class MyOverrideingHash < Hash
+  include Hashie::Extensions::MethodAccessWithOverride
+end
+non_overriding = MyHash.new
+non_overring.zip = 'a-dee-doo-dah'
+non_overring.zip
 
+overriding = MyOverridingHash.new
+overriding.zip = 'a-dee-doo-dah'
+overriding.zip
+overriding.__zip
 
+class MyHash < Hash
+end
+class MyOverridingHash < Hash
+  include Hashie::Extensions::MethodOverridingInitializer
+end
+non_overriding = MyHash.new(zip: 'a-dee-doo-dah')
+non_overriding.zip
+overriding = MyOverridingHash.new(zip: 'a-dee-doo-dah')
+overriding.zip
+overriding.__zip
 
+class MyHash < Hash
+  include Hashie::Extensions::MergeInitalizer
+  include Hashie::Extensions::IndifferentAccess
+end
+myhash = MyHash.new(:cat => 'meow', 'dog' => 'woof')
+myhash['cat']
+myhash[:cat]
+myhash[:dog]
+myhash['dog']
+myhash['fishes'] = {}
+myhash['fishes'].class
+myhash['fishes'][:food] = 'flakes'
+myhash['fishes']['food']
 
+class Person < Trash
+  include Hashie::Extensions::ignoreUndeclared
+  property :first_name
+  property :last_name
+end
+user_data = {
+  first_name: 'Freddy',
+  last_name: 'Nostrils',
+  email: 'freddy@example.com'
+}
+p = Person.new(user_data)
+p.first_name
+p.last_name
+p.email
 
+class MyHash < Hash
+  include Hashie::Extensions::DeepMerge
+end
+h1 = MyHash[ x: { y: [4,5,6] }, z: [7,8,9] ]
+h2 = MyHash[{ x: { y: [7,8,9] }, z: "xyz" }]
+h1.deep_merge(h2)
+h2.deep_merge(h1)
 
+class MyHash < Hash
+  include Hashie::Extensions::DeepMerge
+end
+h1 = MyHash[{ a: 100, b: 200, c: { c1: 100 } }]
+h2 = MyHash[{ b: 250, c: { c1: 200 } }]
+h1.deep_merge(h2) { |key, this_val, other_val| this_val + other_val }
 
+user = {
+  name: { first: 'Bob', last: 'Boberts' },
+  groups: [
+    { name: 'tky' },
+    { name: 'xxx' }
+  ]
+}
+user.deep_fetch :name, :first
+user.deep_fetch :name, :middle
+user.deep_fetch(:name, :middle) { |key| 'default' }
+user.deep_fetch :groups, 1, :name
 
+user = {
+  name: { first: 'Bob', last: 'Boberts' },
+  gorups: [
+    { name: 'tky' },
+    { name: 'xxx' }
+  ]
+}
+user.extend Hashie::Extensions::DeepFind
+user.deep_find(:name)
+user.deep_detect(:name)
+user.deep_find_all(:name)
+user.deep_select(:name)
 
+books = [
+  {
+    title: "xxxx",
+    pages: 120
+  },
+  {
+    title: "xxxx",
+    pages: 80
+  },
+  {
+    title: "xxxx",
+    books: [
+      {
+        title: "xxxx",
+        pages: 576
+      }
+    ]
+  }
+]
+books.extend(Hashie::Extensions::DeepLocate)
 
+class StrictKeyAccessHash < Hash
+  include Hashie::extensions::strictKeyAccess
+end
+>> hash = StrictKeyAccessHash[foo: "bar"]
+>> hash[:foo]
+>> hash[:cow]
 
+mash = Hashie::Mash.new
+mash.name?
+mash.name
+mash.name = "xxx"
+mash.name
+mash.neme?
+mash.inspect
 
+mash = Hashie::Mash.new
+mash.author!.name = "xxx"
+mash.author
+mash = Hashie::Mash.new
+mash.author_.name?
+mash.inspect
 
+mash = Hashie::Mash.new
+mash.name = "My Mash"
+mash.zip = "Method Override?"
+mash.zip
 
+Hashie.logger = Rails.logger
 
+class Response < Hashie::Mash
+  disable_warnings
+end
 
+mash = Hashie::Mash.new(name: "Hashie", dependencies: { rake: "< 11", rspec: "~> 3.0"})
+mash.dependencies.class
 
+class MyGem < Hashie::Mash; end
+my_gem = MyGem.new(name: "Hashie", dependencies: { rake: "< 11", rspec: "~> 3.0" })
+my_gem.dependencies.class
 
+mash = Mash.load('settings/twitter.yml')
+mash.development.api_key
+mash.development.api_key
+mash.development.api_key?
 
+mash = Mash.load(Pathname 'settings/twitter.yml')
+mash.development.api_key
+
+mash = Mash.load('settings/twitter.yml')[ENV['RACK_ENV']]
+Twitter.extend mash.to_module
+Twitter.settings.api_key
+
+mash = Mash.load('data/user.csv', parser: MyCustomCsvParser)
+mash[1]
 
 class KeepingMash < ::Hashie::Mash
   include Hashie::Extensions::Mash::KeepOriginalKeys

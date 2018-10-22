@@ -54,6 +54,40 @@ tweet = Tweet.new(relations: relations_hash)
 tweet.relations.map { |k,v| [k.class, v.class] }
 tweet.relations.class 
 
+class Tweet < Hash
+  include Hashie::Extensions::Coercion
+  coerce_key :retweeted, ->(v) do
+    case v
+    when String
+      !!(v =~ /\A(true|t|yes|y|1)/i)
+    when Numeric
+      !v.to_i.zero?
+    else
+      v == true
+    end
+  end
+end
+
+class CategoryHash < Hash
+  include Hashie::Extensions::Coercion
+  include Hashie::Extensions::MergeInitializer
+  
+  coerce_key :products Array[ProductHash]
+end
+class ProductHash < Hash
+  include Hashie::Extensions::Coercion
+  include Hashie::Extensions::MergeInitializer
+  coerce_key :categories, Array[CategoriesHash]
+end
+
+
+
+
+
+
+
+
+
 
 ```
 
